@@ -72,45 +72,26 @@ end
 f:close()
 local map = CreateMap(lines)
 
-function MovingPointIterator(point, step_x, step_y)
-	assert(point, "Arg 1: no starting point specified")
-	step_x = tonumber(step_x)
-	assert(type(step_x)=="number", "Arg 2: step_x must be number")
-	step_y = tonumber(step_y)
-	assert(type(step_y)=="number", "Arg 3: step_y must be number")
-	assert(step_x~=0 or step_y~=0, "both step_x and step_y cannot be 0")
-	local moving_point = Point(point.x, point.y)
-	return function() -- Move the point on every call
-		moving_point.x = moving_point.x + step_x
-		moving_point.y = moving_point.y + step_y
-		return moving_point
-	end
-end
 
 function PredictArrival(map, point)
 	local current = map:get(point.x, point.y)
 	if current=="." then return ".","." end
-	local iterator_points = {
-		MovingPointIterator(point, -1,  0),	-- Left
-		MovingPointIterator(point, -1, -1),	-- UpLeft
-		MovingPointIterator(point,  0, -1),	-- Up
-		MovingPointIterator(point,  1, -1),	-- UpRight
-		MovingPointIterator(point,  1,  0),	-- Right
-		MovingPointIterator(point,  1,  1),	-- DownRight
-		MovingPointIterator(point,  0,  1),	-- Down
-		MovingPointIterator(point, -1,  1),	-- DownLeft
+	local adjacent_points = {
+		Point(point.x-1, point.y),	-- Left
+		Point(point.x-1, point.y-1),	-- UpLeft
+		Point(point.x, point.y-1),	-- Up
+		Point(point.x+1, point.y-1),	-- UpRight
+		Point(point.x+1, point.y),	-- Right
+		Point(point.x+1, point.y+1),	-- DownRight
+		Point(point.x, point.y+1),	-- Down
+		Point(point.x-1, point.y+1),	-- DownLeft
 	}
 	local flag_stop = false
 	local num_adjacent_occupied = 0
 	
-	for i,iterator_point in ipairs(iterator_points) do
-		for val in (function() local p=iterator_point(); return map:get(p.x, p.y); end) do
-			if val=="#" then
-				num_adjacent_occupied = num_adjacent_occupied+1
-				break;
-			elseif val=="L" then
-				break;
-			end
+	for i,adjacent_point in ipairs(adjacent_points) do
+		if map:get(adjacent_point.x, adjacent_point.y) == "#" then
+			num_adjacent_occupied = num_adjacent_occupied+1
 		end
 	end
 	
@@ -120,7 +101,7 @@ function PredictArrival(map, point)
 		return "#", current
 	-- If a seat is occupied (#) and four or more seats adjacent to it are also occupied,
 	--the seat becomes empty.
-	elseif current == "#" and num_adjacent_occupied >= 5 then 	-- part 2
+	elseif current == "#" and num_adjacent_occupied >= 4 then
 		return "L", current
 	--Otherwise, the seat's state does not change.
 	else
