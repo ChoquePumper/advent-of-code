@@ -1,4 +1,5 @@
 -- Day 18, part 2
+if _VERSION < "Lua 5.2" and not table.unpack then table.unpack = unpack end
 local input_file = arg[1]
 -- Open the file
 local f, err = io.open( input_file, "r" )
@@ -13,15 +14,35 @@ for line in f:lines() do
 end
 f:close() -- close file
 
-local operators = "+*" -- ordered by priority
+local operators = "*+" -- ordered by priority
+function ComparePriority(op1,op2) -- operators
+	if op1==op2 then
+		return 0
+	elseif operators:find(op1) > operators:find(op2) then
+		return 1
+	else
+		return -1
+	end
+end
 
 function EvaluateExpresion(expr)
 	print("EvaluateExpresion",expr)
+	local function group3tostack(stack)
+		local len = #stack
+		local group = {stack[len-2],stack[len-1],stack[len]}
+		assert(type(group[2])=="string","group[2] is not an operator")
+		table.remove(stack)	-- pop
+		table.remove(stack)	-- pop
+		table.remove(stack)	-- pop
+		table.insert(stack,group)	-- push
+	end
+	
 	local result = 0
 	local flag_operator_found = false
 	local i_next, i2, char = 1, nil, nil
-	i_next, i2, char = string.find(expr,"([0-9%(%+%*])", i_next)
+	i_next, i2, char = string.find(expr,"(%S)", i_next)
 	local stack = {}
+	local last_element_is_operator = false
 	while i_next do
 		--print(i_next,i2,char)
 		if char=="(" then
@@ -41,26 +62,15 @@ function EvaluateExpresion(expr)
 			local sub_result = EvaluateExpresion(expr:sub(i_bracket+1,i_pair_bracket-1))
 			print("sub_result",sub_result)
 			--
-			if stack[#stack]=="+" then -- if it's operator
-				local group = {stack[#stack-1],stack[#stack],sub_result}
-				table.remove(stack)
-				table.remove(stack)
-				table.insert(stack,group)
-			else
-				table.insert(stack,sub_result)
-			end
+			table.insert(stack,sub_result)
 			i_next = i_pair_bracket+1
 			--print("Bracket end.")
-			--print("Current result:", result)
 		elseif char=="+" or char=="*" then
-			if char=="*" and stack[#stack-1]=="*" then
-				local group = {stack[#stack-2],stack[#stack-1],stack[#stack]}
-				table.remove(stack)
-				table.remove(stack)
-				table.remove(stack)
-				table.insert(stack,group)
+			while #stack>=3 and ComparePriority( stack[#stack-1], char ) >= 0 do
+				group3tostack(stack)
 			end
 			table.insert(stack, char)
+			last_element_is_operator = true
 			i_next = i_next+1
 		else
 			-- Probably a number
@@ -69,29 +79,21 @@ function EvaluateExpresion(expr)
 			--print(str_num, num)
 			if not num then error("Parsing error at position "..tostring(i_next)) end
 			--
-			if stack[#stack]=="+" then -- if it's operator
-				local group = {stack[#stack-1],stack[#stack],num}
-				table.remove(stack)
-				table.remove(stack)
-				table.insert(stack,group)
-			else
-				table.insert(stack,num)
-			end
+			table.insert(stack,num)
 			
 			i_next = i_next + #str_num
-			--print("Current result:", result)
 		end
 		print("Stack:", table.unpack(stack))
-		i_next, i2, char = string.find(expr,"([0-9%(%+%*])", i_next)
+		i_next, i2, char = string.find(expr,"(%S)", i_next)
 	end
-	-- Calc from stack
-	local function Calc(stack)
-		if #stack % 2 == 0 then
-			print(table.unpack(stack))
+	-- Calc from group
+	local function Calc(group)
+		if #group == 1 then
+			return tonumber(group[1])
 		end
-		assert(#stack % 2 == 1, "Stack length % 2 == 0. Can't calculate.")
-		local operand1, operand2 = stack[1], stack[3]
-		local operator = stack[2]
+		assert(#group == 3, "group length is not 3. Can't calculate.")
+		local operand1, operand2 = group[1], group[3]
+		local operator = group[2]
 		if type(operand1)=="table" then
 			operand1 = Calc(operand1)
 		end
@@ -106,12 +108,16 @@ function EvaluateExpresion(expr)
 			error("Invalid operator "..tostring(operator))
 		end
 	end
+	
+	while #stack>3 do
+		group3tostack(stack)
+	end
 	if #stack==1 and type(stack[1])=="table" then
 		result = Calc(stack[1])
 	else
 		result = Calc(stack)
 	end
-	print("Final result", result)
+	--print("Final result", result)
 	return result
 end
 
