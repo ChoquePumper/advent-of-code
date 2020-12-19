@@ -16,8 +16,7 @@ f:close() -- close file
 
 local operators = "*+" -- ordered by priority
 function ComparePriority(op1,op2) -- operators
-	if op1==op2 then
-		return 0
+	if op1==op2 then	return 0;
 	elseif operators:find(op1) > operators:find(op2) then
 		return 1
 	else
@@ -25,11 +24,14 @@ function ComparePriority(op1,op2) -- operators
 	end
 end
 
-function EvaluateExpresion(expr)
-	print("EvaluateExpresion",expr)
+local mt_group = {
+	__tostring=function(t) return "{"..table.concat({tostring(t[1]),t[2],tostring(t[3])},",").."}" end
+}
+function EvaluateExpression(expr)
+	print("EvaluateExpression",expr)
 	local function group3tostack(stack)
 		local len = #stack
-		local group = {stack[len-2],stack[len-1],stack[len]}
+		local group = setmetatable({stack[len-2],stack[len-1],stack[len]}, mt_group)
 		assert(type(group[2])=="string","group[2] is not an operator")
 		table.remove(stack)	-- pop
 		table.remove(stack)	-- pop
@@ -37,8 +39,6 @@ function EvaluateExpresion(expr)
 		table.insert(stack,group)	-- push
 	end
 	
-	local result = 0
-	local flag_operator_found = false
 	local i_next, i2, char = 1, nil, nil
 	i_next, i2, char = string.find(expr,"(%S)", i_next)
 	local stack = {}
@@ -59,10 +59,10 @@ function EvaluateExpresion(expr)
 				if level == 0 then i_pair_bracket = i1 end
 				i_next2 = i1 + 1
 			until level == 0
-			local sub_result = EvaluateExpresion(expr:sub(i_bracket+1,i_pair_bracket-1))
+			local sub_result = EvaluateExpression(expr:sub(i_bracket+1,i_pair_bracket-1))
 			print("sub_result",sub_result)
 			--
-			table.insert(stack,sub_result)
+			table.insert(stack,sub_result)	-- push
 			i_next = i_pair_bracket+1
 			--print("Bracket end.")
 		elseif char=="+" or char=="*" then
@@ -79,7 +79,7 @@ function EvaluateExpresion(expr)
 			--print(str_num, num)
 			if not num then error("Parsing error at position "..tostring(i_next)) end
 			--
-			table.insert(stack,num)
+			table.insert(stack,num)	-- push
 			
 			i_next = i_next + #str_num
 		end
@@ -109,9 +109,9 @@ function EvaluateExpresion(expr)
 		end
 	end
 	
-	while #stack>3 do
-		group3tostack(stack)
-	end
+	while #stack>3 do	group3tostack(stack);	end
+	
+	local result = 0
 	if #stack==1 and type(stack[1])=="table" then
 		result = Calc(stack[1])
 	else
@@ -123,9 +123,9 @@ end
 
 local total_sum = 0
 for i,line in ipairs(lines) do
-	local result = EvaluateExpresion(line)
+	local result = EvaluateExpression(line)
 	print( string.format("Result %d: %d", i, result) )
 	total_sum = total_sum + result
 end
 
-print("sum of the resulting values:", total_sum)
+print("Sum of the resulting values:", total_sum)

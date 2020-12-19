@@ -13,7 +13,7 @@ for line in f:lines() do
 end
 f:close() -- close file
 
-function EvaluateExpresion(expr)
+function EvaluateExpression(expr)
 	local result = 0
 	local flag_operator_found = false
 	local i_next, i2, char = 1, nil, nil
@@ -35,7 +35,7 @@ function EvaluateExpresion(expr)
 				if level == 0 then i_pair_bracket = i1 end
 				i_next2 = i1 + 1
 			until level == 0
-			local sub_result = EvaluateExpresion(expr:sub(i_bracket+1,i_pair_bracket-1))
+			local sub_result = EvaluateExpression(expr:sub(i_bracket+1,i_pair_bracket-1))
 			print("sub_result",sub_result)
 			if flag_operator_found == "+" then
 				result = result + sub_result
@@ -80,9 +80,9 @@ end
 
 local total_sum = 0
 for i,line in ipairs(lines) do
-	local result = EvaluateExpresion(line)
+	local result = EvaluateExpression(line)
 	print( string.format("Result %d: %d", i, result) )
 	total_sum = total_sum + result
 end
 
-print("sum of the resulting values:", total_sum)
+print("Sum of the resulting values:", total_sum)
