@@ -2,9 +2,7 @@
 local GridMap; GridMap = {
 	get = function(self, x,y)
 		local row = self[y]
-		if row then
-			return row[x] or 0
-		end
+		if row then return row[x] or 0; end
 		return 0
 	end,
 	set = function(self, x,y, value)
@@ -38,34 +36,26 @@ local GridMap; GridMap = {
 }
 GridMap.__index = GridMap
 
-local function generatePointSequence(x1,y1, x2,y2)
+local function generatePointSequenceIterator(x1,y1, x2,y2)
 	x1 = assert(tonumber(x1)); y1 = assert(tonumber(y1))
 	x2 = assert(tonumber(x2)); y2 = assert(tonumber(y2))
-	local sequence = {} -- A list of tuples: {{x,y},...}
-	-- For now consider vertical and horizontal lines only
-	if x1 == x2 then -- vertical
-		for y=y1, y2, (y2>y1) and 1 or -1 do
-			table.insert(sequence, {x1,y})
-		end
-	elseif y1 == y2 then -- horizontal
-		for x=x1, x2, (x2>x1) and 1 or -1 do
-			table.insert(sequence, {x,y1})
-		end
-	else -- diagonal
-		assert(math.abs(x2-x1) == math.abs(y2-y1), "Can't create the sequence: "..string.format("%d,%d -> %d,%d",x1,y1,x2,y2))
-		local steps = math.abs(x2-x1)
-		local step_x = (x2>x1) and 1 or -1
-		local step_y = (y2>y1) and 1 or -1
-		local x,y = x1,y1
-		table.insert(sequence, {x,y})
-		for i=1, steps do
-			x = x + step_x; y = y + step_y
-			table.insert(sequence, {x,y})
-		end
-		assert(x==x2 and y==y2)
+	local h_steps = math.abs(x2-x1) -- steps on horizontal axis
+	local v_steps = math.abs(y2-y1) -- steps on vertical axis
+	assert( (h_steps > 0 and v_steps == 0) -- horizontal 
+	     or (h_steps == 0 and v_steps > 0) -- vertical
+	     or (h_steps == v_steps) -- diagonal (45 deg)
+	, "Can't create the sequence: "..string.format("%d,%d -> %d,%d",x1,y1,x2,y2))
+	local step_x = (h_steps == 0) and 0 or ((x2>x1) and 1 or -1)
+	local step_y = (v_steps == 0) and 0 or ((y2>y1) and 1 or -1)
+	local steps_remaining = math.max(h_steps,v_steps) + 1
+	local next_x, next_y = x1, y1
+	return function()
+		if steps_remaining < 1 then return nil end
+		local x,y = next_x, next_y
+		next_x = next_x + step_x; next_y = next_y + step_y
+		steps_remaining = steps_remaining - 1
+		return x,y
 	end
-	assert(#sequence > 0)
-	return sequence
 end
 
 function solvePart2(input_iterable)
@@ -73,14 +63,13 @@ function solvePart2(input_iterable)
 	local count_overlaps = 0
 	for line in input_iterable do
 		local x1,y1, x2,y2 = string.match(line, "(%d+),(%d+) %-> (%d+),(%d+)")
-		local _pcall_res, _pcall_ret = pcall(generatePointSequence, x1,y1, x2,y2)
-		if not _pcall_res and not _pcall_ret:find("Ign:") then
-			error(_pcall_ret,0)
+		local _pcall_res, _pcall_ret = pcall(generatePointSequenceIterator, x1,y1, x2,y2)
+		if not _pcall_res then error(_pcall_ret,0)
 		elseif _pcall_res and _pcall_ret then
 			-- Set points on map
-			local sequence = _pcall_ret
-			for i,point in ipairs(sequence) do
-				local x,y = point[1], point[2]
+			local sequence_iterator = _pcall_ret
+			for x,y in sequence_iterator do
+				--local x,y = point[1], point[2]
 				if map:increment(x,y) == 2 then -- Overlap at least twice
 					count_overlaps = count_overlaps + 1
 					--print("Overlap on point", x,y)
@@ -91,13 +80,6 @@ function solvePart2(input_iterable)
 	end
 	-- Return the answer
 	return count_overlaps
-end
-
-local function main(filename)
-	local f = assert(io.open(filename)) -- Open file
-	local part1answer = solvePart2(f:lines())
-	f:close()
-	print("Part 2: answer", part1answer)
 end
 
 local function stringLineIterator(text)
@@ -111,10 +93,18 @@ local function stringLineIterator(text)
 			next_i = found_at+1
 		else
 			line = text:sub(next_i)
+			if #line < 1 then line = nil end -- Ignore last line if it's empty
 			next_i = nil
 		end
 		return line
 	end
+end
+
+local function main(filename)
+	local f = assert(io.open(filename)) -- Open file
+	local part2answer = solvePart2(stringLineIterator(f:read("*a")))
+	f:close()
+	print("Part 2: answer", part2answer)
 end
 
 function test(test_input, expected_value)
