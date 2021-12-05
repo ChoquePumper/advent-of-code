@@ -1,4 +1,4 @@
--- Advent of Code 2021, day 04, part 1
+-- Advent of Code 2021, day 04, part 2
 local Board; Board =  {
 	getRowCol = function(self,sel_number)
 		local index = assert(self:getIndexForNumber(sel_number))
