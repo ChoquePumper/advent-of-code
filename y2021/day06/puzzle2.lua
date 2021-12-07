@@ -1,45 +1,36 @@
 -- Advent of Code 2021, day 06, part 2
 if _VERSION < "Lua 5.2" and not table.unpack then table.unpack = unpack end
-local cache_fishes_count_on_days = setmetatable({},{
-	__index = {
-		set = function(self, timer,days, value)
-			local days_table = self[timer]
-			if not days_table then
-				days_table = {}
-				self[timer] = days_table
-			end
-			days_table[days] = value
-		end,
-		get = function(self, timer,days)
-			local days_table = self[timer]
-			if days_table then
-				return days_table[days]
-			end
-			return nil
-		end,
-	}
-})
+local cache_fishes_table = setmetatable({},{__index = {
+	set = function(self, timer,days, value)
+		local days_table = self[timer]
+		if not days_table then
+			days_table = {}
+			self[timer] = days_table
+		end
+		days_table[days] = value
+	end,
+	get = function(self, timer,days)
+		local days_table = self[timer]
+		return days_table and days_table[days] or nil
+	end,
+}})
 
 function fishesCountOnDays(initial_timer,initial_days)
 	local timer = assert(tonumber(initial_timer))
 	local days = math.max(0, (assert(tonumber(initial_days)) ))
-	local cached_res = cache_fishes_count_on_days:get(initial_timer,initial_days)
-	if cached_res then
-		return cached_res
-	end
+	local cached_res = cache_fishes_table:get(initial_timer,initial_days)
+	if cached_res then	return cached_res;	end
 	local fishes = 1
-	local additional = 0
 	for d=days, 1, -1 do
 		if timer==0 then
-			additional = additional + fishesCountOnDays(8, d-1)
+			fishes = fishes + fishesCountOnDays(8, d-1)
 			timer = 6
 		else
 			timer = timer-1
 		end
 	end
-	local total = fishes + additional
-	cache_fishes_count_on_days:set(initial_timer,initial_days, total)
-	return total
+	cache_fishes_table:set(initial_timer,initial_days, fishes)
+	return fishes
 end
 
 function solvePart2(input_iterable)
@@ -52,21 +43,7 @@ function solvePart2(input_iterable)
 end
 
 local function stringLineIterator(text)
-	local next_i = 1
-	return function()
-		if not next_i then return nil end
-		local line = nil
-		local found_at = string.find(text,"(,)", next_i)
-		if found_at then
-			line = text:sub(next_i, found_at-1)
-			next_i = found_at+1
-		else
-			line = text:sub(next_i)
-			if #line < 1 then line = nil end -- Ignore last line if it's empty
-			next_i = nil
-		end
-		return (assert(tonumber(line)))
-	end
+	return string.gmatch(text,"([^,]+)")
 end
 
 local function main(filename)
