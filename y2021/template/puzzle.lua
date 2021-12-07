@@ -44,6 +44,7 @@ local function stringLineIterator(text)
 			next_i = found_at+1
 		else
 			line = text:sub(next_i)
+			if #line < 1 then line = nil end -- Ignore last line if it's empty
 			next_i = nil
 		end
 		return line
@@ -51,7 +52,7 @@ local function stringLineIterator(text)
 end
 
 function test(test_input, expected_value)
-	print("Running test...") 
+	print("Running test...")
 	local answer = solvePart1(stringLineIterator(test_input))
 	print("Result from test:", answer)
 	assert(answer==expected_value, string.format("Test failed! Expected value: %d", expected_value))
