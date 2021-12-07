@@ -2,9 +2,14 @@
 
 function solvePart1(input_table)
 	table.sort(input_table) -- Sort list
-	local n = #input_table; assert(n%2==0)
-	local median = (input_table[math.floor(n/2)] + input_table[math.floor(n/2)+1]) / 2
-	assert(math.floor(median) == math.ceil(median), "Can't solve")
+	local n = #input_table
+	local median
+	if n % 2 == 0 then
+		median = (input_table[n/2] + input_table[(n/2)+1]) / 2
+	else
+		median = input_table[n+1/2]
+	end
+	assert(math.floor(median) == median, "Can't solve")
 	median = math.floor(median)
 	local total_fuel = 0
 	for i=1, n do

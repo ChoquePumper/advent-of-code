@@ -10,18 +10,17 @@ function solvePart2(input_table)
 	local n = #input_table
 	local sum = 0
 	for i=1, n do sum = sum + input_table[i]; end
-	local min_total_fuel = nil
+	local min_total_fuel = math.huge
 	for _,int_funcname in ipairs{"floor","ceil"} do
 		local fuel = 0
 		local mean_int = math[int_funcname](sum / n)
 		for i=1, n do
 			fuel = fuel + calcFuel(math.abs(mean_int-input_table[i]))
 		end
-		if not min_total_fuel then min_total_fuel = fuel
-		else min_total_fuel = math.min(min_total_fuel,fuel) end
+		min_total_fuel = math.min(min_total_fuel,fuel)
 		print("mean", int_funcname, fuel)
 	end
-	return assert(min_total_fuel)
+	return min_total_fuel
 end
 
 local function stringLineIterator(text)
