@@ -11,20 +11,16 @@ function solvePart1(input_table)
 	map.max_y = #map
 	map.max_x = #map[1]
 	local sum_risk_levels = 0
-	for y=1,map.max_y do for x=1, map.max_x do
+	for y=1,map.max_y do for x=1,map.max_x do
 		local level = getLevel(map,x,y)
 		local is_low = true
 		for _,dy in ipairs{-1,1} do
-			local adyacent_level = getLevel(map,x,y+dy)
-			if adyacent_level and level >= adyacent_level then
-				is_low = false
-			end
+			local adjacent_level = getLevel(map,x,y+dy)
+			is_low = is_low and not(adjacent_level and level >= adjacent_level)
 		end
 		for _,dx in ipairs{-1,1} do
-			local adyacent_level = getLevel(map,x+dx,y)
-			if adyacent_level and level >= adyacent_level then
-				is_low = false
-			end
+			local adjacent_level = getLevel(map,x+dx,y)
+			is_low = is_low and not(adjacent_level and level >= adjacent_level)
 		end
 		if is_low then
 			print("low point at",x,y, level)
@@ -55,21 +51,7 @@ local function main(filename)
 end
 
 local function stringLineIterator(text)
-	local next_i = 1
-	return function()
-		if not next_i then return nil end
-		local line = nil
-		local found_at = string.find(text,"(\n)", next_i)
-		if found_at then
-			line = text:sub(next_i, found_at-1)
-			next_i = found_at+1
-		else
-			line = text:sub(next_i)
-			if #line < 1 then line = nil end -- Ignore last line if it's empty
-			next_i = nil
-		end
-		return line
-	end
+	return string.gmatch(text,"([^\n]+)")
 end
 
 function test(test_input, expected_value)
