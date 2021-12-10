@@ -58,6 +58,17 @@ function test(test_input, expected_value)
 	assert(answer==expected_value, string.format("Test failed! Expected value: %d", expected_value))
 end
 
+function test(test_input, expected_value)
+	print("Running test...")
+	local input_table = {} -- A list with the values
+	for line in stringLineIterator(test_input) do -- Add each value to the list
+	   	--table.insert(input_table, line)
+	end
+	local answer = solvePart2(input_table)
+	print("Result from test:", answer)
+	assert(answer==expected_value, string.format("Test failed! Expected value: %d", expected_value))
+end
+
 if arg then
 	local test_input = {}
 	test(test_input, "?") -- Run a test
