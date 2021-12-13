@@ -64,7 +64,7 @@ function test(test_input, expected_value)
 	for line in stringLineIterator(test_input) do -- Add each value to the list
 	   	--table.insert(input_table, line)
 	end
-	local answer = solvePart2(input_table)
+	local answer = solvePart1(input_table)
 	print("Result from test:", answer)
 	assert(answer==expected_value, string.format("Test failed! Expected value: %d", expected_value))
 end
