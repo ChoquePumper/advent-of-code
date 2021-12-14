@@ -25,14 +25,14 @@ local Polymer; Polymer = {
 		if self.sides[2] == element then l_count = l_count+1 end
 		return math.max(l_count, r_count)
 	end,
-	getAllLetters = function(self)
-		local letters = {}
+	getAllElements = function(self)
+		local elements = {}
 		for pair,_ in pairs(self.pairs_count) do
 			local l,r = getSidesOfPair(pair)
-			letters[l] = true; letters[r] = true
+			elements[l] = true; elements[r] = true
 		end
 		local list = {}
-		for element,_ in pairs(letters) do
+		for element,_ in pairs(elements) do
 			table.insert(list, element)
 		end
 		return list
@@ -82,7 +82,7 @@ function solvePart1(input_iterable, steps)
 	-- Get counts
 	local quantity_least_common = math.huge
 	local quantity_most_common = -math.huge
-	for _,element in ipairs(polymer:getAllLetters()) do
+	for _,element in ipairs(polymer:getAllElements()) do
 		local count = polymer:countElement(element)
 		print(string.format("* ['%s'] = %d", element, count))
 		quantity_least_common = math.min(quantity_least_common, count)
