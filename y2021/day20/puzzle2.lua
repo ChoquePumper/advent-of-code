@@ -19,18 +19,17 @@ end
 function GridMap:getValuesSet()
 	return self.values_set
 end
-function GridMap:getCountPixelsLit() return self.pixels_lit end
+function GridMap:getCountPixelsLit() return self.out_bounds_lit and math.huge or self.pixels_lit end
 ---@param x number
 ---@param y number
 function GridMap:set(x,y, value)
 	local row = self[y]
 	if not row then
-		row = {}
-		self[y] = row
+		row = {}; self[y] = row
 	end
 	if not row[x] then self.values_set = self.values_set+1 end
 	-- set value
-	local whether_count_lit = (value~=self:get(x,y) and (value=="#" and 1 or -1) or 0)
+	local whether_count_lit = (value~=self:get(x,y) and (value=="#" and 1 or (self:get(x,y) and -1 or 0)) or 0)
 	row[x] = value
 	self.pixels_lit = self.pixels_lit+whether_count_lit
 	-- update boundaries
@@ -123,6 +122,7 @@ function solvePart2(enhancement_alg, input_image)
 		print("Applying enhancement algorithm #"..tostring(i))
 		applyEnhancement(map, enhancementFunc)
 		count_pixels_lit = printMap(map)
+		print("map:getCountPixelsLit()", map:getCountPixelsLit())
 	end
 	-- Get pixels lit
 	-- Return the answer

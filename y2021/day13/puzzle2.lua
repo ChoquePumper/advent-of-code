@@ -81,7 +81,10 @@ function solvePart2(input_iterable)
 		assert(axis) val = assert(tonumber(val))
 		table.insert(fold_instructions, {axis=axis, val=val})
 	end
+	
+	local count_instructions = #fold_instructions
 	for i,fold in ipairs(fold_instructions) do
+		print(string.format("Executing fold instruction %d/%d...", i, count_instructions))
 		if fold.axis == "y" then
 			map:foldUp(fold.val)
 		elseif fold.axis == "x" then
