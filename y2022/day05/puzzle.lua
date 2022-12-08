@@ -39,7 +39,7 @@ local function parseInput(input_iterable)
 		for i_line=#lines-1, 1, -1 do
 			local cut_from, cut_to = 1+(i_stack-1)*4, (i_stack)*4
 			local sub_line = lines[i_line]:sub(cut_from, cut_to)
-			local crate = sub_line:match("%[(%w)%]%s?")
+			local crate = sub_line:match("%[(.)%]%s?")
 			if not crate then
 				if sub_line:sub(1,3)=="   " then
 					break -- Top of the stack reached
