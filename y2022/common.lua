@@ -41,3 +41,19 @@ function runMainFunc(main_func)
 	main_func(args)
 	_G.arg = args
 end
+
+function string.split(s, delimiter)
+	local i = 1
+	local next_i = 1
+	local res = {}	---@type string[]
+	while next_i do
+		local end_i
+		next_i, end_i = string.find(s, delimiter, next_i, true)
+		table.insert(res, string.sub(s, i, next_i and next_i-1))
+		if end_i then
+			i = end_i+1
+			next_i = i
+		end
+	end
+	return res
+end
